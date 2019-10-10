@@ -1,0 +1,23 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t eadehem/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true eadehem/react-test npm test
+
+after_success:
+  # build the docker images
+  - docker build -t eadehem/multi-client ./client
+  - docker build -t eadehem/multi-nginx ./nginx
+  - docker build -t eadehem/multi-server ./server
+  - docker build -t eadehem/multi-worker ./worker
+  # login to docker CLI (we have added log in deets to travis)
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stin
+  # now need to take these images and push them to docker hub
+  - docker push eadehem/multi-client
+  - docker push eadehem/multi-server
+  - docker push eadehem/multi-worker
+  - docker push eadehem/multi-nginx
