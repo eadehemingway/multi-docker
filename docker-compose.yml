@@ -1,0 +1,47 @@
+version: '3'
+services:
+  postgres-service:
+    image: 'postgres:latest'
+  redis-service:
+    image: 'redis:latest'
+  nginx-service:
+    restart: always
+    build:
+      dockerfile: Dockerfile.dev
+      context: ./nginx
+    ports:
+      - '3050:80' # this directs all traffic to port 80 in the container, so we dont need to write EXPOSE 80 in the nginx conf file like we did before...
+  api-service:
+    depends_on:
+      - postgres-service
+    build:
+      dockerfile: Dockerfile.dev # this is just the name of the file not the file path
+      context: ./server # this use the source code inside the server folder, and also look here for our dockerfile too
+    volumes:
+      - /app/node_modules # dont try to override the node_modules
+      - ./server:/app # for everythign accept nodemodules, set up reference to our original files
+    environment:
+      - REDIS_HOST=redis-service # refering to the service above
+      - REDIS_PORT=6379 # from the docs
+      - PGUSER=postgres # default
+      - PGHOST=postgres-service # referring to the service above
+      - PGDATABASE=postgres # default
+      - PGPASSWORD=postgres_password # default password
+      - PGPORT=5432 # from docs
+  client-service:
+    build:
+      dockerfile: Dockerfile.dev
+      context: ./client
+    volumes:
+      - /app/node_modules
+      - ./client:/app
+  worker-service:
+    environment:
+      - REDIS_HOST=redis-service # refering to the service above
+      - REDIS_PORT=6379 # from the docs
+    build:
+      dockerfile: Dockerfile.dev
+      context: ./worker
+    volumes:
+      - /app/node_modules
+      - ./worker:/app
