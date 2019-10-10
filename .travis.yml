@@ -15,7 +15,7 @@ after_success:
   - docker build -t eadehem/multi-server ./server
   - docker build -t eadehem/multi-worker ./worker
   # login to docker CLI (we have added log in deets to travis)
-  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stin
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
   # now need to take these images and push them to docker hub
   - docker push eadehem/multi-client
   - docker push eadehem/multi-server
